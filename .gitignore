@@ -1,0 +1,12 @@
+tags
+*.cmd.c
+*.o
+*.out
+*.ts
+*.out
+*.swp
+*.map
+*.exp
+*.ilk
+*.mod*
+
