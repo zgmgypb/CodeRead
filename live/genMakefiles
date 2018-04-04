@@ -22,4 +22,4 @@ done
 
 /bin/rm -f Makefile
 cat Makefile.head config.$1 Makefile.tail > Makefile
-chmod a-w Makefile
+chmod a-w Makefile # a-w 表示所有用户(u,g,o)下该文件的权限都不开写权限
