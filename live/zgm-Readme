@@ -1,0 +1,230 @@
+LIVE555 Streaming Media
+
+This code forms a set of C++ libraries for multimedia streaming, using open standard protocols (RTP/RTCP, RTSP, SIP). 
+These libraries - which can be compiled for Unix (including Linux and Mac OS X), Windows, and QNX (and other POSIX-compliant systems) - can be used to build streaming applications. 
+The libraries are already being used to implement applications such as the "LIVE555 Media Server" and "LIVE555 Proxy Server" (RTSP server applications), and "vobStreamer" (for streaming DVD content using RTP/RTCP/RTSP). 
+The libraries can also be used to stream, receive, and process MPEG, H.265, H.264, H.263+, DV or JPEG video, and several audio codecs. They can easily be extended to support additional (audio and/or video) codecs, and can also be used to build basic RTSP or SIP clients and servers, and have been used to add streaming support to existing media player applications, such as "VLC" and "MPlayer". (For some specific examples of how these libraries can be used, see the test programs below.)
+
+Source code
+The project source code is available - as a ".tar.gz" file - here. See below for instructions on how to build it. 
+(Note: To use this software, you must be aware of how it is licensed, and your obligations under this license.)
+
+Mailing list
+There is a developers' mailing list: "live-devel@lists.live555.com". Users (or prospective users) of the libraries are encouraged to join this (low-volume 小容量) mailing list, and/or to review the mailing list's archives. (You can also search these archives using Google, by adding "site:lists.live555.com" to your search query.) Before posting to the mailing list for the first time, please read the FAQ, to check if your question has already been answered.
+
+Support
+The primary means(手段,方法) of support for these libraries is the "live-devel@lists.live555.com" mailing list described above. (Note that you must first subscribe(订阅) to the mailing list before you can post to it.)
+Are you planning to implement RTP (and/or RTSP)? Instead of writing your own implementation from scratch(打草稿), consider using these libraries. They have already been used in many real-world RTP-based applications, and are well-suited(便利的) for use within embedded systems. The code includes an implementation of RTCP, and can easily be extended (via subclassing 子类化) to support new RTP payload types.
+
+Help support improvements and extensions to the "LIVE555 Streaming Media" software: LIVE555 Funded Projects.
+
+-----
+目录
+1. Description (including test programs)
+2. How to configure and build the code on Unix (including Linux, Mac OS X, QNX, and other Posix-compliant systems)
+3. How to configure and build the code on Windows
+4. Frequently Asked Questions (FAQ). (Please read this before posting questions to the mailing list.)
+5. Source code license
+6. To do...
+7. Some third-party applications
+-----
+
+第一节 Description
+The code includes the following libraries, each with its own subdirectory:
+
+目录结构
+.
+├── BasicUsageEnvironment
+├── groupsock
+├── liveMedia
+├── mediaServer
+├── proxyServer
+├── testProgs
+├── UsageEnvironment
+└── WindowsAudioInputDevice
+
+1. UsageEnvironment
+The "UsageEnvironment" and "TaskScheduler" classes(这两个类) are used for scheduling deferred events(调度延迟事件), for assigning handlers for asynchronous read events(为异步的读事件分配处理器), and for outputting error/warning messages(输出错误/警告信息). Also, the "HashTable" class defines the interface to a generic hash table, used by the rest of the code.
+These are all abstract base classes(这里抽象了所有的基础类); they must be subclassed for use in an implementation. These subclasses can exploit(利用) the particular properties of the environment in which the program will run - e.g., its GUI and/or scripting environment.(最后这一句没有看懂？？？)
+
+2. groupsock
+The classes in this library encapsulate network interfaces and sockets(网络接口和 socket 的封装). In particular, the "Groupsock" class encapsulates a socket for sending (and/or receiving) multicast datagrams(Groupsock 类用于组播报文的收发).
+
+3. liveMedia
+This library defines a class hierarchy - rooted in the "Medium" class - for a variety of streaming media types and codecs.
+这个库定义了一个类的层次结构 - 从"Medium"类开始 - 到各种各样的流媒体类型和编解码器
+
+4. BasicUsageEnvironment
+This library defines one concrete implementation(具体实现) (i.e., subclasses) of the "UsageEnvironment" classes, for use in simple, console applications. Read events and delayed operations are handled using a select() loop.
+
+5. testProgs(主要是一些用库来开发的实例，我们阅读代码时，主要也是看着里面的代码)
+This directory implements some simple programs that use "BasicUsageEnvironment" to demonstrate how to develop applications using these libraries.
+
+RTSP client(用于接收 RTSP 流媒体的客户端,只接收数据，但对数据不会做任何处理,我们可以将这些数据用到自己的播放器代码解码播放等等，也就是说这个应用程序实现了 RTSP 交互的协议，对于 RTP 只接收数据，但不处理)
+testRTSPClient is a command-line program that shows you how to open and receive media streams that are specified by a RTSP URL - i.e., an URL that begins with rtsp://
+In this demonstration application, nothing is done with the received audio/video data. You could, however, use and adapt this code in your own application to (for example) decode and play the received data.
+
+openRTSP(这个和 testRTSPClient 有点类似，但是它包含了全部的功能，具体使用需要看该应用的文档)
+openRTSP is similar to "testRTSPClient", but has many more features. It is a command-line program that - unlike "testRTSPClient" - is intended to be used as a complete, full-featured application (rather than having its code used within other applications 而不是在它的代码中嵌入其他的应用). For more information about "openRTSP" - including its many command-line options - see the online documentation.
+
+RTSP server
+testOnDemandRTSPServer creates a RTSP server that can stream, via RTP unicast, from various types of media file, on demand(随需应变). (Supported media types include: MPEG-1 or 2 audio or video (elementary stream ES 流), including MP3 audio; MPEG-4 video (elementary stream); H.264 video (elementary stream); H.265 video (elementary stream); MPEG Program or Transport streams(TS 流), including VOB files(VOB 格式是 DVD 使用的格式); DV video; AMR audio; WAV (PCM) audio.) The server can also stream from a Matroska(一种多媒体封装格式, 即 MKV) or WebM(一种免费的媒体文件格式) file (by demultiplexing and streaming the tracks(轨道) within the file). MPEG Transport Streams can also be streamed over raw UDP, if requested - e.g., by a set-top box.
+This server application also demonstrates how to deliver - via RTSP - a MPEG Transport Stream that arrived at the server as a UDP (raw-UDP or RTP/UDP) multicast or unicast stream(组播和单播都支持). In particular, it is set up, by default, to accept input from the "testMPEG2TransportStreamer" demo application.
+
+SIP client
+playSIP is a command-line program (similar to "openRTSP") that makes a call to a SIP session (using a sip: URL), and then (optionally) records the incoming media stream into a file(记录输入的流媒体到一个文件).
+
+MP3 audio test programs(循环读 mp3 文件并通过 RTP 组播该文件，组播地址 239.255.42.42:6666)
+testMP3Streamer repeatedly reads from a MP3 audio file (named "test.mp3"), and streams it, using RTP, to the multicast group 239.255.42.42, port 6666 (with RTCP using port 6667). This program also has an (optional) built-in RTSP server.
+testMP3Receiver does the reverse: It reads a MP3/RTP stream (from the same multicast group/port), and outputs the reconstituted(重新建立) MP3 stream to "stdout". It also sends RTCP Reception Reports.
+Alternatively(二选一), the MP3/RTP stream could be played using one of these tools.(http://www.live555.com/liveCaster/receiving.html)
+
+MPEG video test programs(MPEG 视频流传送测试程序)
+testMPEG1or2VideoStreamer repeatedly reads from a MPEG-1 or 2 video file (named "test.mpg"), and streams it, using RTP, to the multicast group 239.255.42.42, port 8888 (with RTCP using port 8889). This program also has an (optional) built-in RTSP server.
+By default, the input file is assumed to be a MPEG Video Elementary Stream. If, however, it is a MPEG Program Stream, then you can also insert a demultiplexing filter to extract the Video Elementary Stream. (See "testMPEG1or2VideoStreamer.cpp" for details.)
+Apple's "QuickTime Player" can be used to receive and view this streamed video (provided that it's MPEG-1, not MPEG-2). To use this, have QuickTime Player open the file "testMPEG1or2Video.sdp". (If "testMPEG1or2VideoStreamer's" RTSP server has been enabled, then QuickTime Player can also play the stream using a "rtsp://" URL.)
+The Open Source "VLC" and "MPlayer" media players can also be used.
+RealNetworks(RealPlayer 的制造商)' "RealPlayer" can also be used to play the stream. (A recent version is recommended.)
+testMPEG1or2VideoReceiver does the reverse: It reads a MPEG Video/RTP stream (from the same multicast group/port), and outputs the reconstituted MPEG video (elementary) stream to "stdout". It also sends RTCP Reception Reports.
+testMPEG4VideoStreamer repeatedly reads from a MPEG-4 Elementary Stream video file (named "test.m4e"), and streams it using RTP multicast. This program also has a built-in RTSP server.
+Apple's "QuickTime Player" can be used to receive and play this audio stream. To use this, have the player open the session's "rtsp://" URL (which the program prints out as it starts streaming).
+The Open Source "VLC" and "MPlayer" media players can also be used.
+testH264VideoStreamer repeatedly reads from a H.264 Elementary Stream video file (named "test.264"), and streams it using RTP multicast. This program also has a built-in RTSP server.
+Apple's "QuickTime Player" can be used to receive and play this audio stream. To use this, have the player open the session's "rtsp://" URL (which the program prints out as it starts streaming).
+The Open Source "VLC" and "MPlayer" media players can also be used.
+testH265VideoStreamer repeatedly reads from a H.265 Elementary Stream video file (named "test.265"), and streams it using RTP multicast. This program also has a built-in RTSP server.
+MPEG audio+video (Program Stream) test programs
+testMPEG1or2AudioVideoStreamer reads a MPEG-1 or 2 Program Stream file (named "test.mpg"), extracts from this an audio and a video Elementary Stream, and streams these, using RTP, to the multicast group 239.255.42.42, port 6666/6667 (for the audio stream) and 8888/8889 (for the video stream). This program also has an (optional) built-in RTSP server.
+Apple's "QuickTime Player" can be used to receive and view this streamed video (provided that it's MPEG-1, not MPEG-2). To use this, have QuickTime Player open the file "testMPEG1or2AudioVideo.sdp". (If "testMPEG1or2VideoStreamer's" RTSP server has been enabled, then QuickTime Player can also play the stream using a "rtsp://" URL.)
+The Open Source "VLC" and "MPlayer" media players can also be used.
+
+testMPEG1or2Splitter(分解器) reads a MPEG-1 or 2 Program Stream file (named "in.mpg"), and extracts from this an audio and a video Elementary Stream. These two Elementary Streams are written into files named "out_audio.mpg" and "out_video.mpg" respectively.(用于把 mpeg 文件分离为单独的音频文件和视频文件)
+
+MPEG audio+video (Transport Stream) test programs
+testMPEG2TransportStreamer reads a MPEG Transport Stream file (named "test.ts"), and streams it, using RTP, to the multicast group 239.255.42.42, port 1234 (with RTCP using port 1235). This program also has an (optional) built-in RTSP server.
+The Open Source "VLC" media player can be used to play this stream.
+testMPEG2TransportReceiver does the reverse: It reads a MPEG Transport/RTP stream (from the same multicast group/port), and outputs the reconstituted MPEG Transport Stream stream to "stdout". It also sends RTCP Reception Reports.
+
+testMPEG1or2ProgramToTransportStream(将 mpeg 文件转换为 ts 文件) reads a MPEG-1 or 2 Program Stream file (named "in.mpg"), and converts it to an equivalent MPEG Transport Stream file, named "out.ts".
+testH264VideoToTransportStream(将 H264 文件转换为 TS 流文件) reads a H.264 Video Elementary Stream file (named "in.264"), and converts it to an equivalent MPEG Transport Stream file, named "out.ts".
+testH265VideoToTransportStream(将 H265 文件转换为 TS 流文件) reads a H.265 Video Elementary Stream file (named "in.265"), and converts it to an equivalent MPEG Transport Stream file, named "out.ts".
+
+PCM audio test program
+testWAVAudioStreamer reads from a WAV-format audio file (named "test.wav"), and streams the enclosed(封装) PCM audio stream via IP multicast, using a built-in RTSP server.
+The program supports 8 or 16-bit PCM streams, mono or stereo, at any sampling frequency(支持 8/16 位的 PCM 数据，单声道/立体声，和任意采样率).
+Apple's "QuickTime Player" can be used to receive and play this audio stream. To use this, have the player open the session's "rtsp://" URL (which the program prints out as it starts streaming).
+Optionally, 16-bit PCM streams can be converted to 8-bit u-law format prior to streaming. (See "testWAVAudioStreamer.cpp" for instructions on how to do this.)
+The Open Source "VLC" and "MPlayer" media players can also be used.
+
+AMR audio test program
+testAMRAudioStreamer reads from a AMR-format audio file (named "test.amr") - as defined in RFC 3267, section 5 - and streams the enclosed audio stream via IP multicast, using a built-in RTSP server.
+Apple's "QuickTime Player" can be used to receive and play this audio stream. To use this, have the player open the session's "rtsp://" URL (which the program prints out as it starts streaming).
+
+DV video test program
+testDVVideoStreamer reads from a DV video file (named "test.dv"), and streams it via IP multicast, using a built-in RTSP server.
+At present, we know of no widely-available media player client that can play this stream.
+
+Matroska (or 'Webm') streaming test program
+testMKVStreamer reads from a 'Matroska' (or 'Webm') file (named "test.mkv"), and streams it via IP multicast, using a built-in RTSP server.
+
+VOB (DVD) streaming test program
+vobStreamer reads one or more ".vob" files (e.g., from a DVD), extracts the audio and video streams, and transmits them using RTP multicast.
+
+Support for server 'trick play'(花式播放？) operations on MPEG Transport Stream files
+The applications MPEG2TransportStreamIndexer and testMPEG2TransportStreamTrickPlay
+
+Miscellaneous test programs
+testRelay(转播) repeatedly reads from a UDP multicast socket, and retransmits ('relays') each packet's payload to a new (multicast or unicast) address and port.
+testReplicator(复制) is similar to testRelay, except that it replicates the input stream - using the "FrameReplicator" class - and retransmits one replica(复制品) stream to another (multicast or unicast) address and port, while writing the other replica stream to a file(同时写另一个复制的流到文件中).
+
+(SDP:会话描述协议; SAP:会话通知协议)
+sapWatch reads and prints SDP/SAP announcements made on the default SDP/SAP directory (224.2.127.254/9875)
+
+registerRTSPStream sends a custom RTSP "REGISTER" command to a given RTSP client (or proxy server), asking it to stream from a given "rtsp://" URL.
+
+6. WindowsAudioInputDevice
+This is an implementation of the "liveMedia" library's "AudioInputDevice" abstract class. This can be used by a Windows application to read PCM audio samples from an input device.
+(This project builds two libraries: "libWindowsAudioInputDevice_mixer.lib"(mixer:混合器), which uses Windows' built-in mixer, and "libWindowsAudioInputDevice_noMixer.lib", which doesn't.)
+
+-----
+
+在 linux/类 unix 环境下编译和配置
+第二节 How to configure and build the code on Unix (including Linux, Mac OS X, QNX, and other Posix-compliant systems)
+The source code package can be found (as a ".tar.gz" file) here. Use "tar -x" and "gunzip" (or "tar -xz", if available) to extract the package; then cd to the "live" directory. Then run
+    ./genMakefiles <os-platform>(在每个子目录下生成 makefile 文件)
+where <os-platform> is your target platform - e.g., "linux" or "solaris" - defined by a "config.<os-platform>" file. This will generate a Makefile in the "live" directory and each subdirectory. Then run "make".
+If the "make" fails, you may need to make small modifications to the appropriate "config.<os-platform>" file, and then re-run "genMakefiles <os-platform>". (E.g., you may need to add another "-I<dir>" flag to the COMPILE_OPTS definition.)
+Some people (in particular, FreeBSD users) have reported that the GNU version of "make" - often called "gmake" - works better than their default, pre-installed version of "make". (In particular, you should try using "gmake" if you encounter linking problems with the "ar" command.)(使用 FreeBSD 系统的用户，最好使用 gmake，否则容易遭到 "ar" 命令导致的链接错误)
+If you're using "gcc" version 3.0 or greater: You may also wish to add the -Wno-deprecated(使用过时的特性时不要给出警告,因为源码中一些特性在新的标准中编译可能会报使用了过时的特性警告) flag to CPLUSPLUS_FLAGS.
+If no "config.<os-platform>" file exists for your target platform, then try using one of the existing files as a template.(没有目标文件存在的话，可以使用已存在的文件作为一个模板来创建对应平台的 config 文件)
+If you wish, you can also 'install' the headers, libraries, and applications by running "make install".
+
+-----
+(windows 的暂时用不到，不用看)
+第三节 How to configure and build the code on Windows
+Unpack and extract the '.tar.gz' file (using an application such as "WinZip").
+If the 'tools' directory on your Windows machine is something other than "c:\Program Files\DevStudio\Vc", change the "TOOLS32 =" line in the file "win32config".
+In a command shell, 'cd' to the "live" directory, and run
+genWindowsMakefiles
+This will generate - in each subdirectory - a "*.mak" makefile suitable for use by (e.g.) Microsoft Visual Studio.
+
+Alternatively, if you're starting from a Unix machine, you can generate the Windows Makefiles by running
+    ./genWindowsMakefiles
+(after - if necessary - changing the "TOOLS32 =" line in the file "win32config", as noted above). Then, copy the "live" directories and its subdirectories (in ASCII mode) to a Windows machine.
+To use these Makefiles from within Visual Studio, use the "Open Workspace" menu command, then (in the file selection dialog) for "Files of type", choose "Makefiles (.mak)". Visual Studio should then prompt you, asking if you want to use this Makefile to set up a new project. Say "OK".
+Note that you will need to build each of the "UsageEnvironment", "groupsock", "liveMedia", and "BasicUsageEnvironment" projects first, before building "testProgs".
+If you wish, you can build the "WindowsAudioInputDevice" project also.
+Doug Kosovic notes: Visual C++ 2003 no longer comes with the old I/O Streams headers iostreams.h et al, or the corresponding library msvcirt.lib. So anybody trying to build the LIVE555 code with VC++ 2003 might find the following useful: A non-sourcecode modification workaround for VC++ 2003 is to copy the missing headers and msvcirt.lib from VC++ 2002. In file 'win32config' add an extra -I switch to COMPILE_OPTS to find the old headers and a -LIBPATH: switch to LINK_OPTS_0 to find msvcirt.lib.
+If you're using the Borland C++ compiler
+The instructions above assume that you use Microsoft Visual Studio (version 5 or greater) as your C++ development environment. If, however, you are using Borland's development tools, then the instructions above are amended as follows:
+Before running the "genWindowsMakefiles.cmd" script, edit it to replace each occurrence of "win32config" with "win32config.Borland".
+After running "genWindowsMakefiles", edit each of the new Makefiles by following these instructions.
+
+-----
+
+第四节 Frequently Asked Questions (FAQ)
+(Please read this before posting questions to the mailing list.)
+http://www.live555.com/liveMedia/faq.html
+
+-----
+
+第五节 Source code license
+This code is "open source", and is released under the LGPL(GNU Lesser General Public License (GNU 宽通用公共许可证)的缩写形式). This allows you to use these libraries (via linking) inside closed-source products. It also allows you to make closed-source binary extensions to these libraries - for instance, to support proprietary(所有权) media codecs that subclass the existing "liveMedia" class hierarchy. Nonetheless(尽管如此，但是), we hope that subclass extensions of these libraries will also be developed under the LGPL, and contributed for inclusion here. We encourage developers to contribute to the development and enhancement(增大，增强) of these libraries.
+
+-----
+
+第六节 To do...
+Extend the "liveMedia" library to support even more media types and/or codecs.
+Supply(提供) additional "UsageEnvironment" subclassed implementations - e.g., for use with scripted environments, such as Tcl, Python, or Perl.
+Expand the RTCP implementation to support more SDES(SDES（SourceDescription）：源描述项，包括CNAME, NAME, EMAIL,PHONE等) items (other than just CNAME), and to more completely handle incoming RTCP packets.
+In places the code uses data types such as "unsigned", where instead specific lengths (e.g., 32 bits) are required(数据类型要用"unsigned"这样的，而不是固定的长度). The data types should be changed in each such case.
+Fix the "groupsock" implementation so that it could use IPv6 instead of IPv4. (At present, 4-byte addresses are hard-wired(硬编译的) into the code in several places.)
+Switch to using ISO-conformant(符合 ISO 的) C++ headers (but in such a way(指当前的方式) that the code can remain portable across both Unix (using gcc) and Windows (using Visual C++)).
+Implement network sockets ("groupsock"s) as "liveMedia" 'sources'. This will make the code for RTP sources more consistent(一致) with the rest of(其余的) the "liveMedia" library, allowing them to be "FramedFilters". (This will make it possible to use synthetic(合成的) network sockets - e.g., for debugging or simulation.)
+Add support for SRTP ('secure' RTP), and perhaps also RTSP-over-TLS.(TLS：Transport Layer Security 安全传输层协议)
+
+-----
+
+第七节 Some third-party applications
+Several third-party devices and applications have made use of the LIVE555 Streaming Media Software. Here is a list of some of them:
+
+Hardware
+"RaspberrIPCam" - a full HD IP Camera based on Raspberry Pi(树莓派)
+Network-enabled, RTP-streaming Security Cameras, from RVision
+The "LMLM4" MPEG-4 audio/video hardware encoder PCI board, from Linux Media Labs.
+WIS Technologies media encoders. (The "wis-streamer" server application - for Linux - can be used to stream from many of these encoders.)
+Elphel Network Video Cameras (with optional JPEG streaming over RTP).
+The "Cam.ly" wireless security camera system uses "openRTSP" to archive recorded video.
+
+Software
+The "VLC" media player (uses the "LIVE555 Streaming Media" libraries for its RTSP client implementation).
+The "MPlayer media player.
+Ralf Globisch's "Video Processing Project" - a RTSP client DirectShow Filter
+"Morgan RTP DirectShowTM Filters", from Morgan Multimedia
+"Omnimeeting" - a videoconferencing application
+"Network-Integrated Multimedia Middleware (NMM)", from Saarland University
+"ivrworx" - a SIP IVR application - uses "LIVE555 Streaming Media" code for RTP mixing
+"LiveMediaStreamer" - an open source multimedia framework
+"MediaPortal - an open source media center
+If you would like your product (or project) added to this list, please send email to the developers' mailing list.
+-----

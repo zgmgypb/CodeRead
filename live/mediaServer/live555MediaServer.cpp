@@ -17,7 +17,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // LIVE555 Media Server
 // main program
 
-#include <BasicUsageEnvironment.hh>
+/* hh 作为后缀，在 linux 下的 c++ 的头文件命名中常见 */
+#include <BasicUsageEnvironment.hh> 
 #include "DynamicRTSPServer.hh"
 #include "version.hh"
 
